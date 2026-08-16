@@ -2,29 +2,61 @@
 
 import { useState } from "react";
 import { Tree } from "./Tree";
+import { Sky } from "./Sky";
+
+type TreeSpot = { xPct: number; bottomPct: number; scale: number };
+
+const MIN_GAP_PCT = 4; // minimum horizontal gap between trees at similar depth
 
 export function Scene() {
-  const [trees, setTrees] = useState<
-    { xPct: number; bottomPct: number; scale: number }[]
-  >([]);
+  const [trees, setTrees] = useState<TreeSpot[]>([]);
 
   function addTree() {
-    const randomX = 10 + Math.random() * 80;
-    const randomBottom = Math.random() * 28;
-    const randomScale = 0.65 + Math.random() * 0.55;
-    setTrees((prev) => [...prev, { xPct: randomX, bottomPct: randomBottom, scale: randomScale }]);
+    let spot: TreeSpot | null = null;
+    let attempts = 0;
+
+    while (!spot && attempts < 15) {
+      attempts++;
+      const candidate: TreeSpot = {
+        xPct: 4 + Math.random() * 92,
+        bottomPct: Math.random() * 40, // extended range = more depth
+        scale: 0.55 + Math.random() * 0.6,
+      };
+
+      const tooClose = trees.some((t) => {
+        const depthCloseness = Math.abs(t.bottomPct - candidate.bottomPct);
+        const horizontalGap = Math.abs(t.xPct - candidate.xPct);
+        // only worry about overlap if they're roughly the same depth
+        return depthCloseness < 6 && horizontalGap < MIN_GAP_PCT;
+      });
+
+      if (!tooClose) spot = candidate;
+    }
+
+    // if we couldn't find a clear spot after 15 tries, just place it anyway
+    if (!spot) {
+      spot = {
+        xPct: 4 + Math.random() * 92,
+        bottomPct: Math.random() * 40,
+        scale: 0.55 + Math.random() * 0.6,
+      };
+    }
+
+    setTrees((prev) => [...prev, spot as TreeSpot]);
   }
 
   return (
-    <div className="w-full h-screen flex items-center justify-center bg-[#1c2418]">
+    <div className="w-full h-screen flex items-center justify-center bg-[#0f1a24]">
       <div
         className="relative w-full max-w-[1400px] max-h-screen overflow-hidden"
         style={{
           aspectRatio: "20 / 9",
           background:
-            "linear-gradient(180deg, #F7ECDB 0%, #F4E5CE 24%, #E7F0DC 42%, #DDEEDD 52%)",
+            "linear-gradient(180deg, #4A6B8A 0%, #6B8FAD 22%, #9CB8C9 42%, #C9D9CE 52%)",
         }}
       >
+        <Sky />
+
         <div
           className="absolute left-0 right-0 bottom-0"
           style={{
