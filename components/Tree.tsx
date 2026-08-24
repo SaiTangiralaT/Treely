@@ -11,10 +11,7 @@ export function Tree({
   bottomPct: number;
   scale: number;
 }) {
-  // depth 0 = front/close, depth 1 = back/far
   const depth = Math.min(bottomPct / 30, 1);
-
-  // atmospheric perspective: far trees fade toward the misty sky color
   const canopyColor = mixColor("#1F4530", "#B9C9AE", depth * 0.65);
   const trunkColor = mixColor("#3A2A1C", "#8A9482", depth * 0.65);
 
@@ -24,20 +21,22 @@ export function Tree({
       style={{
         left: `${xPct}%`,
         bottom: `${bottomPct}%`,
-        width: 40 * scale,
-        height: 130 * scale,
+        width: 40,
+        height: 130,
         translateX: "-50%",
-        filter: `blur(${depth * 1.2}px) drop-shadow(0 4px 3px rgba(20,40,20,${0.25 - depth * 0.15}))`,
+        zIndex: Math.round(1000 - bottomPct * 20),
       }}
       initial={{ scale: 0, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 - depth * 0.15 }}
+      animate={{ scale: scale, opacity: 1 - depth * 0.15 }}
       transition={{ type: "spring", stiffness: 60, damping: 12 }}
     >
       <motion.div
         className="w-full h-full"
+        style={{
+          filter: `blur(${depth * 1.2}px) drop-shadow(0 4px 3px rgba(20,40,20,${0.25 - depth * 0.15}))`,
+        }}
         animate={{ rotate: [-1, 1, -1] }}
         transition={{ duration: 4.5 + depth * 2, repeat: Infinity, ease: "easeInOut" }}
-        style={{ transformOrigin: "50% 96%" }}
       >
         <svg viewBox="0 0 40 130" className="w-full h-full overflow-visible">
           <rect x="17" y="112" width="6" height="18" fill={trunkColor} />
@@ -48,7 +47,6 @@ export function Tree({
   );
 }
 
-// blends two hex colors together; t=0 returns colorA, t=1 returns colorB
 function mixColor(colorA: string, colorB: string, t: number): string {
   const a = hexToRgb(colorA);
   const b = hexToRgb(colorB);

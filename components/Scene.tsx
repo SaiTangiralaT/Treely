@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Tree } from "./Tree";
 import { Sky } from "./Sky";
+import { Grass } from "./Grass";
 
 type TreeSpot = { xPct: number; bottomPct: number; scale: number };
 
@@ -66,6 +67,8 @@ export function Scene() {
             clipPath: "polygon(0 10%, 100% 4%, 100% 100%, 0% 100%)",
           }}
         />
+
+        <Grass />
 
         {trees.map((t, i) => (
           <Tree key={i} xPct={t.xPct} bottomPct={t.bottomPct} scale={t.scale} />
