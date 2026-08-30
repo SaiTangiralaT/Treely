@@ -5,15 +5,20 @@ import { Tree } from "./Tree";
 import { Sky } from "./Sky";
 import { Grass } from "./Grass";
 import { Woodcutter } from "./woodcutter";
+import { Homestead } from "./Homestead";
+import { Dog } from "./Dog";
 
 type TreeSpot = { xPct: number; bottomPct: number; scale: number };
 
 const MIN_GAP_PCT = 4; // minimum horizontal gap between trees at similar depth
+const HOMESTEAD_X = 88;
+const HOMESTEAD_EXCLUSION_PCT = 20;
+const HOMESTEAD_FRONT_DEPTH_LIMIT = 15; // only block trees closer to viewer than this
 
 export function Scene() {
   const [trees, setTrees] = useState<TreeSpot[]>([]);
   const [woodcutterX, setWoodcutterX] = useState(50);
-  const [facingLeft, setFacingLeft] = useState(false);
+  const [chopping, setChopping] = useState(false);
 
   function addTree() {
     let spot: TreeSpot | null = null;
@@ -27,18 +32,22 @@ export function Scene() {
         scale: 0.55 + Math.random() * 0.6,
       };
 
-      const tooClose = trees.some((t) => {
+      const nearHomesteadX = Math.abs(candidate.xPct - HOMESTEAD_X) < HOMESTEAD_EXCLUSION_PCT;
+      const inFrontOfHomestead = candidate.bottomPct < HOMESTEAD_FRONT_DEPTH_LIMIT;
+      const blockedByHomestead = nearHomesteadX && inFrontOfHomestead;
+
+      const tooCloseToTree = trees.some((t) => {
         const depthCloseness = Math.abs(t.bottomPct - candidate.bottomPct);
         const horizontalGap = Math.abs(t.xPct - candidate.xPct);
         return depthCloseness < 6 && horizontalGap < MIN_GAP_PCT;
       });
 
-      if (!tooClose) spot = candidate;
+      if (!blockedByHomestead && !tooCloseToTree) spot = candidate;
     }
 
     if (!spot) {
       spot = {
-        xPct: 4 + Math.random() * 92,
+        xPct: 4 + Math.random() * 70,
         bottomPct: Math.random() * 40,
         scale: 0.55 + Math.random() * 0.6,
       };
@@ -49,8 +58,12 @@ export function Scene() {
 
   function walkToRandomSpot() {
     const target = 5 + Math.random() * 90;
-    setFacingLeft(target < woodcutterX);
     setWoodcutterX(target);
+  }
+
+  function testChop() {
+    setChopping(true);
+    setTimeout(() => setChopping(false), 1800);
   }
 
   return (
@@ -81,20 +94,31 @@ export function Scene() {
           <Tree key={i} xPct={t.xPct} bottomPct={t.bottomPct} scale={t.scale} />
         ))}
 
-        <Woodcutter xPct={woodcutterX} facingLeft={facingLeft} />
+        <Homestead xPct={HOMESTEAD_X} />
+
+        <Dog />
+
+        <Woodcutter xPct={woodcutterX} chopping={chopping} />
 
         <button
           onClick={addTree}
-          className="absolute top-4 left-4 z-50 bg-white/90 px-4 py-2 rounded-lg text-sm"
+          className="absolute top-4 left-4 z-50 bg-white/90 px-4 py-2 rounded-lg text-sm text-gray-900"
         >
           + Add tree (test)
         </button>
 
         <button
           onClick={walkToRandomSpot}
-          className="absolute top-4 left-44 z-50 bg-white/90 px-4 py-2 rounded-lg text-sm"
+          className="absolute top-4 left-44 z-50 bg-white/90 px-4 py-2 rounded-lg text-sm text-gray-900"
         >
           Walk (test)
+        </button>
+
+        <button
+          onClick={testChop}
+          className="absolute top-4 left-[21rem] z-50 bg-white/90 px-4 py-2 rounded-lg text-sm text-gray-900"
+        >
+          Chop (test)
         </button>
       </div>
     </div>
